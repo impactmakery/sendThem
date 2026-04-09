@@ -5,17 +5,15 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { StepIndicator } from '@/components/wizard/step-indicator';
 import { useWizardStore, type ValidationSummary } from '@/stores/wizard-store';
-import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import { MAX_EXCEL_FILE_SIZE, ACCEPTED_FILE_EXTENSIONS } from '@repo/shared';
 import { useLanguage } from '@/lib/language-context';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function StepBPage() {
   const router = useRouter();
   const { t } = useLanguage();
   const { campaignId, campaignName, fileName, validation, setFileData } = useWizardStore();
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [currentFile, setCurrentFile] = useState<{ name: string; size: number } | null>(
@@ -25,6 +23,7 @@ export default function StepBPage() {
 
   const processFile = useCallback(async (file: File) => {
     setError(null);
+    setUploadProgress(0);
 
     if (!campaignId) {
       setError('Campaign not found. Please go back and create a campaign first.');
@@ -45,22 +44,23 @@ export default function StepBPage() {
     }
 
     setUploading(true);
+    setUploadProgress(10);
     setCurrentFile({ name: file.name, size: file.size });
 
     try {
-      const supabase = createSupabaseBrowser();
-      const { data: { session } } = await supabase.auth.getSession();
+      setUploadProgress(20);
 
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`${API_BASE_URL}/campaigns/${campaignId}/upload`, {
+      setUploadProgress(30);
+
+      const response = await fetch(`/api/campaigns/${campaignId}/upload`, {
         method: 'POST',
-        headers: {
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        },
         body: formData,
       });
+
+      setUploadProgress(80);
 
       if (!response.ok) {
         const errorBody = await response.json().catch(() => ({ error: 'Upload failed' }));
@@ -68,6 +68,7 @@ export default function StepBPage() {
       }
 
       const result: ValidationSummary = await response.json();
+      setUploadProgress(100);
 
       setCurrentValidation(result);
       setFileData(
@@ -84,6 +85,7 @@ export default function StepBPage() {
       setCurrentFile(null);
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   }, [campaignId, setFileData]);
 
@@ -160,6 +162,14 @@ export default function StepBPage() {
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
                     <p className="text-sm text-white/50">{t('loading')}</p>
+                    {uploadProgress > 0 && (
+                      <div className="w-48 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -305,7 +315,7 @@ export default function StepBPage() {
             </Link>
             <button
               onClick={() => router.push('/campaigns/new/step-c')}
-              disabled={!currentValidation}
+              disabled={!currentValidation || currentValidation.validCount === 0}
               className="bg-white text-[#060606] px-6 py-2 rounded-full text-sm font-medium hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {t('next')}

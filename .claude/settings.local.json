@@ -59,7 +59,14 @@
       "mcp__monday-api-mcp-impactmakery__move_item_to_group",
       "mcp__monday-api-mcp-impactmakery__change_item_column_values",
       "mcp__monday-api-mcp-impactmakery__all_monday_api",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(pnpm --filter @repo/web add xlsx)",
+      "Bash(pnpm --filter @repo/web add stripe resend)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_take_screenshot"
     ]
   }
 }

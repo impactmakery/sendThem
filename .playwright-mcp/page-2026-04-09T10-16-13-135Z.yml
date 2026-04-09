@@ -1,0 +1,35 @@
+- generic [ref=e2]:
+  - button "EN" [ref=e4]
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - heading "ברוכים השבים" [level=1] [ref=e9]
+      - paragraph [ref=e10]: התחברו לקמפיינים ולקרדיטים שלכם.
+    - button "התחברות עם Google" [ref=e11]:
+      - img [ref=e12]
+      - text: התחברות עם Google
+    - generic [ref=e18]: או המשיכו עם אימייל
+    - generic [ref=e19]:
+      - text: אימייל
+      - textbox "אימייל" [ref=e20]:
+        - /placeholder: you@example.com
+    - generic [ref=e21]:
+      - text: סיסמה
+      - textbox "סיסמה" [ref=e22]
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - checkbox "זכור אותי" [ref=e25]
+        - text: זכור אותי
+      - link "שכחתם סיסמה?" [ref=e26] [cursor=pointer]:
+        - /url: /forgot-password
+    - button "התחברות" [ref=e27]
+    - paragraph [ref=e28]:
+      - text: אין לכם חשבון?
+      - link "הרשמה" [ref=e29] [cursor=pointer]:
+        - /url: /signup
+  - generic [ref=e31]:
+    - link "S" [ref=e32] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e34]: S
+    - heading "SendThem" [level=2] [ref=e35]
+    - paragraph [ref=e36]: שלחו הודעות WhatsApp לקהל שלכם בבטחה ובאמינות. בלי סיכון למספר האישי.
+    - generic [ref=e37]: העלאת אקסלהתאמה אישיתשליחה

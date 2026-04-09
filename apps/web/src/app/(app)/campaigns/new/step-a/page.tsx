@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { StepIndicator } from '@/components/wizard/step-indicator';
 import { useWizardStore } from '@/stores/wizard-store';
-import { apiClient } from '@/lib/api-client';
+import { nextApiClient } from '@/lib/next-api-client';
 import { CAMPAIGN_NAME_MAX_LENGTH, CAMPAIGN_NOTES_MAX_LENGTH, validateCampaignName } from '@repo/shared';
 import { useLanguage } from '@/lib/language-context';
 
@@ -29,7 +29,7 @@ export default function StepAPage() {
     setError(null);
 
     try {
-      const campaign = await apiClient<{ id: string; name: string; notes: string }>(
+      const campaign = await nextApiClient<{ id: string; name: string; notes: string }>(
         '/campaigns',
         { method: 'POST', body: { name, notes } }
       );

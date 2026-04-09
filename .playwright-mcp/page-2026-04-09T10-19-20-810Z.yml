@@ -1,0 +1,20 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e47]
+  - generic [ref=e48]:
+    - banner [ref=e49]:
+      - generic [ref=e50]:
+        - link "S SendThem" [ref=e51] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e52]: S
+          - generic [ref=e53]: SendThem
+        - generic [ref=e54]:
+          - link "0 קרדיטים" [ref=e55] [cursor=pointer]:
+            - /url: /credits
+            - img [ref=e56]
+            - text: 0 קרדיטים
+          - link "רכישת קרדיטים" [ref=e59] [cursor=pointer]:
+            - /url: /credits
+          - button "EN" [ref=e60] [cursor=pointer]
+          - button "?" [ref=e62] [cursor=pointer]
+    - main [ref=e63]:
+      - heading "לוח בקרה" [level=1] [ref=e65]
