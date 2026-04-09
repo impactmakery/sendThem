@@ -330,7 +330,7 @@ export default function LandingPageHe() {
           <div className="hidden md:flex items-center gap-3">
             <a href="/" className="text-xs text-white/40 hover:text-white/60">EN</a>
             <Link href="/login" className="text-sm text-white/70 hover:text-white px-4 py-2 transition-colors">התחברות</Link>
-            <Link href="/signup" onClick={handleCtaClick} className="text-sm font-medium bg-white text-[#060606] px-5 py-2 rounded-full hover:bg-white/90 transition-colors">התחל עכשיו</Link>
+            <Link href="/checkout" onClick={handleCtaClick} className="text-sm font-medium bg-white text-[#060606] px-5 py-2 rounded-full hover:bg-white/90 transition-colors">התחל עכשיו</Link>
           </div>
 
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-white/60">
@@ -351,7 +351,7 @@ export default function LandingPageHe() {
             <div className="pt-2 flex flex-col gap-2">
               <a href="/" className="text-xs text-center text-white/40 hover:text-white/60 py-1">EN</a>
               <Link href="/login" className="text-sm text-center text-white/70 border border-white/20 px-4 py-2.5 rounded-full">התחברות</Link>
-              <Link href="/signup" onClick={handleCtaClick} className="text-sm text-center font-medium bg-white text-[#060606] px-4 py-2.5 rounded-full">התחל עכשיו</Link>
+              <Link href="/checkout" onClick={handleCtaClick} className="text-sm text-center font-medium bg-white text-[#060606] px-4 py-2.5 rounded-full">התחל עכשיו</Link>
             </div>
           </div>
         )}
@@ -385,7 +385,7 @@ export default function LandingPageHe() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/signup"
+              href="/checkout"
               onClick={handleCtaClick}
               className="group relative inline-flex items-center gap-2.5 bg-white text-[#060606] font-medium px-7 py-3.5 rounded-full text-sm hover:bg-white/90 transition-all shadow-[0_0_32px_rgba(16,185,129,0.15)]"
             >
@@ -514,7 +514,7 @@ export default function LandingPageHe() {
                     </div>
                   ))}
                 </div>
-                <Link href="/signup" onClick={handleCtaClick} className="inline-flex items-center gap-2 bg-white text-[#060606] font-medium px-8 py-3.5 rounded-full text-sm hover:bg-white/90 transition-colors">
+                <Link href="/checkout" onClick={handleCtaClick} className="inline-flex items-center gap-2 bg-white text-[#060606] font-medium px-8 py-3.5 rounded-full text-sm hover:bg-white/90 transition-colors">
                   התחילו בחינם
                   <svg className="w-4 h-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -552,7 +552,7 @@ export default function LandingPageHe() {
             <div className="relative z-10">
               <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight mb-5">מוכנים להגיע לקהל שלכם?</h2>
               <p className="text-white/50 text-base mb-8 max-w-lg mx-auto">צרו חשבון תוך 30 שניות ושלחו את קמפיין הוואטסאפ הראשון שלכם היום. 50 קרדיטים חינם בהרשמה.</p>
-              <Link href="/signup" onClick={handleCtaClick} className="inline-flex items-center gap-2 bg-white text-[#060606] font-medium px-8 py-3.5 rounded-full text-sm hover:bg-white/90 transition-colors shadow-[0_0_40px_rgba(16,185,129,0.12)]">
+              <Link href="/checkout" onClick={handleCtaClick} className="inline-flex items-center gap-2 bg-white text-[#060606] font-medium px-8 py-3.5 rounded-full text-sm hover:bg-white/90 transition-colors shadow-[0_0_40px_rgba(16,185,129,0.12)]">
                 התחילו בחינם
                 <svg className="w-4 h-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
