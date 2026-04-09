@@ -119,7 +119,7 @@ export function AppHeader({ creditBalance: initialBalance = 0, userEmail }: AppH
             {menuOpen && (
               <>
                 <div className="fixed inset-0" onClick={() => setMenuOpen(false)} />
-                <div className="absolute left-0 mt-2 w-48 bg-[#111] border border-white/[0.08] rounded-xl shadow-2xl py-1 z-40">
+                <div className="absolute right-0 mt-2 w-48 bg-[#111] border border-white/[0.08] rounded-xl shadow-2xl py-1 z-40">
                   <div className="px-3 py-2 text-xs text-white/40 border-b border-white/[0.06] truncate" dir="ltr">
                     {userEmail}
                   </div>

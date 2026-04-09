@@ -300,7 +300,7 @@ function CampaignCard({ campaign, onDelete, onDuplicate }: CampaignCardProps) {
     <div className="relative group">
       <Link href={href} className="block">
         <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 hover:border-emerald-500/20 hover:bg-white/[0.04] transition-all duration-300">
-          <div className="flex items-start justify-between mb-3">
+          <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-white truncate group-hover:text-emerald-400 transition-colors">
                 {campaign.name}
@@ -312,9 +312,7 @@ function CampaignCard({ campaign, onDelete, onDuplicate }: CampaignCardProps) {
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <StatusBadge status={campaign.status} />
-            </div>
+            <StatusBadge status={campaign.status} />
           </div>
 
           <div className="flex items-center gap-6 mt-4 pt-3 border-t border-white/[0.04]">
@@ -336,15 +334,15 @@ function CampaignCard({ campaign, onDelete, onDuplicate }: CampaignCardProps) {
         </div>
       </Link>
 
-      {/* Three-dot menu button */}
-      <div ref={menuRef} className="absolute top-4 left-4 z-10">
+      {/* Three-dot menu — bottom-end corner */}
+      <div ref={menuRef} className="absolute bottom-3 end-3 z-10">
         <button
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             setMenuOpen((v) => !v);
           }}
-          className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-white/40 hover:text-white/70 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/[0.1] text-white/30 hover:text-white/70 transition-all opacity-0 group-hover:opacity-100"
           aria-label="Campaign actions"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -353,7 +351,7 @@ function CampaignCard({ campaign, onDelete, onDuplicate }: CampaignCardProps) {
         </button>
 
         {menuOpen && (
-          <div className="absolute top-full left-0 mt-1 bg-[#111] border border-white/[0.1] rounded-xl shadow-xl py-1 min-w-[160px] z-20">
+          <div className="absolute bottom-full end-0 mb-1 bg-[#111] border border-white/[0.1] rounded-xl shadow-xl py-1 min-w-[160px] z-20">
             {/* Duplicate — available for all statuses */}
             <button
               onClick={(e) => {
