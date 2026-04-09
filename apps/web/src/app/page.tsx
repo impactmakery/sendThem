@@ -80,8 +80,8 @@ function MagneticWrap({ children, className = '' }: { children: React.ReactNode;
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const sx = useSpring(x, { stiffness: 250, damping: 20 });
-  const sy = useSpring(y, { stiffness: 250, damping: 20 });
+  const sx = useSpring(x, { stiffness: 150, damping: 30 });
+  const sy = useSpring(y, { stiffness: 150, damping: 30 });
 
   const handleMouse = useCallback((e: React.MouseEvent) => {
     const el = ref.current;
@@ -89,8 +89,8 @@ function MagneticWrap({ children, className = '' }: { children: React.ReactNode;
     const r = el.getBoundingClientRect();
     const cx = r.left + r.width / 2;
     const cy = r.top + r.height / 2;
-    x.set((e.clientX - cx) * 0.25);
-    y.set((e.clientY - cy) * 0.25);
+    x.set((e.clientX - cx) * 0.08);
+    y.set((e.clientY - cy) * 0.08);
   }, [x, y]);
 
   const reset = useCallback(() => { x.set(0); y.set(0); }, [x, y]);
@@ -379,6 +379,202 @@ function IconCheck() {
 }
 
 /* ───────────────── Animated line connector (how it works) ───────────────── */
+
+/* ───────────────── Three.js floating ring (pricing bg) ───────────────── */
+
+function FloatingRing() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = ref.current;
+    if (!container) return;
+    let destroyed = false;
+
+    import('three').then((THREE) => {
+      if (destroyed || !container) return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera.position.z = 5;
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setClearColor(0x000000, 0);
+      container.appendChild(renderer.domElement);
+
+      const torusGeo = new THREE.TorusGeometry(1.8, 0.04, 32, 100);
+      const torusMat = new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.15 });
+      const torus = new THREE.Mesh(torusGeo, torusMat);
+      scene.add(torus);
+
+      const torus2Geo = new THREE.TorusGeometry(2.2, 0.02, 32, 100);
+      const torus2Mat = new THREE.MeshBasicMaterial({ color: 0x14b8a6, transparent: true, opacity: 0.08 });
+      const torus2 = new THREE.Mesh(torus2Geo, torus2Mat);
+      scene.add(torus2);
+
+      const torus3Geo = new THREE.TorusGeometry(1.4, 0.015, 32, 80);
+      const torus3Mat = new THREE.MeshBasicMaterial({ color: 0x06b6d4, transparent: true, opacity: 0.06 });
+      const torus3 = new THREE.Mesh(torus3Geo, torus3Mat);
+      scene.add(torus3);
+
+      let animId = 0;
+      const loop = () => {
+        if (destroyed) return;
+        animId = requestAnimationFrame(loop);
+        const t = Date.now() * 0.001;
+        torus.rotation.x = Math.sin(t * 0.3) * 0.5 + 0.5;
+        torus.rotation.y = t * 0.15;
+        torus2.rotation.x = Math.cos(t * 0.2) * 0.4 + 0.8;
+        torus2.rotation.y = -t * 0.1;
+        torus3.rotation.x = Math.sin(t * 0.4) * 0.3 + 0.3;
+        torus3.rotation.z = t * 0.12;
+        renderer.render(scene, camera);
+      };
+
+      const onResize = () => {
+        if (!container) return;
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      };
+      window.addEventListener('resize', onResize);
+      loop();
+
+      const cleanup = () => {
+        destroyed = true;
+        window.removeEventListener('resize', onResize);
+        cancelAnimationFrame(animId);
+        torusGeo.dispose(); torusMat.dispose();
+        torus2Geo.dispose(); torus2Mat.dispose();
+        torus3Geo.dispose(); torus3Mat.dispose();
+        renderer.dispose();
+        if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
+      };
+      (container as any).__cleanup = cleanup;
+    });
+
+    return () => {
+      destroyed = true;
+      if ((container as any).__cleanup) (container as any).__cleanup();
+    };
+  }, []);
+
+  return <div ref={ref} className="absolute inset-0 pointer-events-none" />;
+}
+
+/* ───────────────── Three.js particle field (CTA bg) ───────────────── */
+
+function ParticleField() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = ref.current;
+    if (!container) return;
+    let destroyed = false;
+
+    import('three').then((THREE) => {
+      if (destroyed || !container) return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 50);
+      camera.position.z = 8;
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setClearColor(0x000000, 0);
+      container.appendChild(renderer.domElement);
+
+      const count = 200;
+      const positions = new Float32Array(count * 3);
+      const velocities = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 16;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 8;
+        velocities[i * 3] = (Math.random() - 0.5) * 0.003;
+        velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.003;
+        velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.002;
+      }
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const mat = new THREE.PointsMaterial({ color: 0x10b981, size: 0.04, transparent: true, opacity: 0.5, sizeAttenuation: true });
+      const points = new THREE.Points(geo, mat);
+      scene.add(points);
+
+      // Connection lines
+      const lineGeo = new THREE.BufferGeometry();
+      const lineMat = new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.06 });
+      const lines = new THREE.LineSegments(lineGeo, lineMat);
+      scene.add(lines);
+
+      let animId = 0;
+      const loop = () => {
+        if (destroyed) return;
+        animId = requestAnimationFrame(loop);
+
+        for (let i = 0; i < count; i++) {
+          positions[i * 3] += velocities[i * 3];
+          positions[i * 3 + 1] += velocities[i * 3 + 1];
+          positions[i * 3 + 2] += velocities[i * 3 + 2];
+          if (Math.abs(positions[i * 3]) > 8) velocities[i * 3] *= -1;
+          if (Math.abs(positions[i * 3 + 1]) > 5) velocities[i * 3 + 1] *= -1;
+          if (Math.abs(positions[i * 3 + 2]) > 4) velocities[i * 3 + 2] *= -1;
+        }
+        geo.attributes.position.needsUpdate = true;
+
+        // Draw lines between nearby particles
+        const linePositions: number[] = [];
+        const threshold = 2.5;
+        for (let i = 0; i < count; i++) {
+          for (let j = i + 1; j < count; j++) {
+            const dx = positions[i * 3] - positions[j * 3];
+            const dy = positions[i * 3 + 1] - positions[j * 3 + 1];
+            const dz = positions[i * 3 + 2] - positions[j * 3 + 2];
+            const dist = dx * dx + dy * dy + dz * dz;
+            if (dist < threshold) {
+              linePositions.push(
+                positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2],
+                positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2],
+              );
+            }
+          }
+        }
+        lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+
+        renderer.render(scene, camera);
+      };
+
+      const onResize = () => {
+        if (!container) return;
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      };
+      window.addEventListener('resize', onResize);
+      loop();
+
+      const cleanup = () => {
+        destroyed = true;
+        window.removeEventListener('resize', onResize);
+        cancelAnimationFrame(animId);
+        geo.dispose(); mat.dispose(); lineGeo.dispose(); lineMat.dispose();
+        renderer.dispose();
+        if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
+      };
+      (container as any).__cleanup = cleanup;
+    });
+
+    return () => {
+      destroyed = true;
+      if ((container as any).__cleanup) (container as any).__cleanup();
+    };
+  }, []);
+
+  return <div ref={ref} className="absolute inset-0 pointer-events-none" />;
+}
 
 function StepConnector() {
   const ref = useRef<HTMLDivElement>(null);
@@ -935,6 +1131,7 @@ export default function LandingPage() {
 
       {/* ─── Final CTA ─── */}
       <section className="py-20 md:py-28 px-5 relative overflow-hidden">
+        <ParticleField />
         {/* Animated background glow */}
         <motion.div
           animate={{ scale: [1, 1.2, 1], opacity: [0.03, 0.06, 0.03] }}
