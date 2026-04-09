@@ -19,7 +19,7 @@ export const translations = {
   back: { he: 'חזרה', en: 'Back' },
   next: { he: 'הבא', en: 'Next' },
   submit: { he: 'שליחה', en: 'Submit' },
-  loading: { he: 'טוען...', en: 'Loading...' },
+  loading: { he: 'טוען...', en: 'Loading......' },
   email: { he: 'אימייל', en: 'Email' },
   password: { he: 'סיסמה', en: 'Password' },
   confirmPassword: { he: 'אישור סיסמה', en: 'Confirm password' },
