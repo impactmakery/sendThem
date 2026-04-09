@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { StatusBadge } from '@/components/dashboard/status-badge';
 import { nextApiClient } from '@/lib/next-api-client';
 import { useLanguage } from '@/lib/language-context';
+import { useToast } from '@/components/ui/toast';
+import { CAMPAIGN_STATUSES } from '@repo/shared';
 import type { CampaignStatus } from '@repo/shared';
 
 interface CampaignRow {
@@ -207,10 +210,80 @@ function StatsStrip({ campaigns }: { campaigns: CampaignRow[] }) {
   );
 }
 
+/* ─── Confirm Dialog ─── */
+
+function ConfirmDialog({
+  open,
+  title,
+  message,
+  confirmLabel,
+  cancelLabel,
+  onConfirm,
+  onCancel,
+  loading,
+}: {
+  open: boolean;
+  title: string;
+  message: string;
+  confirmLabel: string;
+  cancelLabel: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  loading?: boolean;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onCancel}>
+      <div
+        className="bg-[#111] border border-white/[0.1] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+        <p className="text-sm text-white/50 mb-6">{message}</p>
+        <div className="flex items-center justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="bg-white/[0.05] border border-white/[0.1] text-white/70 px-4 py-2 rounded-full text-sm font-medium hover:bg-white/[0.08] transition-colors"
+          >
+            {cancelLabel}
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="bg-red-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
+          >
+            {loading ? '...' : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Campaign Cards ─── */
 
-function CampaignCard({ campaign }: { campaign: CampaignRow }) {
+interface CampaignCardProps {
+  campaign: CampaignRow;
+  onDelete: (id: string) => void;
+  onDuplicate: (id: string) => void;
+}
+
+function CampaignCard({ campaign, onDelete, onDuplicate }: CampaignCardProps) {
   const { t } = useLanguage();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [menuOpen]);
 
   function formatDate(dateStr: string | null) {
     if (!dateStr) return '—';
@@ -224,41 +297,100 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
       : `/campaigns/${campaign.id}/report`;
 
   return (
-    <Link href={href} className="group block">
-      <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 hover:border-emerald-500/20 hover:bg-white/[0.04] transition-all duration-300">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-white truncate group-hover:text-emerald-400 transition-colors">
-              {campaign.name}
-            </h3>
-            <div className="flex items-center gap-2 mt-1">
-              <IconClock className="w-3.5 h-3.5 text-white/30" />
-              <span className="text-xs text-white/30">
-                {formatDate(campaign.sendCompletedAt || campaign.scheduledAt || campaign.createdAt)}
-              </span>
+    <div className="relative group">
+      <Link href={href} className="block">
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 hover:border-emerald-500/20 hover:bg-white/[0.04] transition-all duration-300">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-white truncate group-hover:text-emerald-400 transition-colors">
+                {campaign.name}
+              </h3>
+              <div className="flex items-center gap-2 mt-1">
+                <IconClock className="w-3.5 h-3.5 text-white/30" />
+                <span className="text-xs text-white/30">
+                  {formatDate(campaign.sendCompletedAt || campaign.scheduledAt || campaign.createdAt)}
+                </span>
+              </div>
             </div>
-          </div>
-          <StatusBadge status={campaign.status} />
-        </div>
-
-        <div className="flex items-center gap-6 mt-4 pt-3 border-t border-white/[0.04]">
-          <div className="flex items-center gap-2">
-            <IconUsers className="w-4 h-4 text-white/25" />
-            <span className="text-sm text-white/50">
-              {campaign.recipientCount > 0 ? campaign.recipientCount.toLocaleString() : '0'} {t('recipients')}
-            </span>
-          </div>
-          {campaign.sentCount > 0 && (
             <div className="flex items-center gap-2">
-              <IconSend className="w-4 h-4 text-emerald-400/50" />
-              <span className="text-sm text-emerald-400/70">
-                {campaign.sentCount.toLocaleString()} {t('sent')}
+              <StatusBadge status={campaign.status} />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6 mt-4 pt-3 border-t border-white/[0.04]">
+            <div className="flex items-center gap-2">
+              <IconUsers className="w-4 h-4 text-white/25" />
+              <span className="text-sm text-white/50">
+                {campaign.recipientCount > 0 ? campaign.recipientCount.toLocaleString() : '0'} {t('recipients')}
               </span>
             </div>
-          )}
+            {campaign.sentCount > 0 && (
+              <div className="flex items-center gap-2">
+                <IconSend className="w-4 h-4 text-emerald-400/50" />
+                <span className="text-sm text-emerald-400/70">
+                  {campaign.sentCount.toLocaleString()} {t('sent')}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
+      </Link>
+
+      {/* Three-dot menu button */}
+      <div ref={menuRef} className="absolute top-4 left-4 z-10">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setMenuOpen((v) => !v);
+          }}
+          className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-white/40 hover:text-white/70 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+          aria-label="Campaign actions"
+        >
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+          </svg>
+        </button>
+
+        {menuOpen && (
+          <div className="absolute top-full left-0 mt-1 bg-[#111] border border-white/[0.1] rounded-xl shadow-xl py-1 min-w-[160px] z-20">
+            {/* Duplicate — available for all statuses */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setMenuOpen(false);
+                onDuplicate(campaign.id);
+              }}
+              className="w-full text-right px-4 py-2 text-sm text-white/70 hover:bg-emerald-500/10 hover:text-emerald-400 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+              </svg>
+              {t('duplicateCampaign')}
+            </button>
+
+            {/* Delete — only for draft */}
+            {campaign.status === 'draft' && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMenuOpen(false);
+                  onDelete(campaign.id);
+                }}
+                className="w-full text-right px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+                {t('deleteCampaign')}
+              </button>
+            )}
+          </div>
+        )}
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -304,8 +436,40 @@ function LoadingSkeleton() {
 
 export default function DashboardPage() {
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const router = useRouter();
   const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<CampaignStatus | 'all'>('all');
+
+  const STATUS_LABEL_MAP: Record<CampaignStatus, string> = {
+    draft: t('draft'),
+    pending_template_approval: t('pendingApproval'),
+    template_rejected: t('templateRejected'),
+    ready_to_send: t('readyToSend'),
+    scheduled: t('scheduled'),
+    sending: t('sendingStatus'),
+    sent: t('sentStatus'),
+    partially_failed: t('partiallyFailed'),
+    failed: t('failedStatus'),
+    canceled: t('canceled'),
+  };
+
+  const filteredCampaigns = useMemo(() => {
+    let result = campaigns;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter((c) => c.name.toLowerCase().includes(q));
+    }
+    if (statusFilter !== 'all') {
+      result = result.filter((c) => c.status === statusFilter);
+    }
+    return result;
+  }, [campaigns, searchQuery, statusFilter]);
 
   useEffect(() => {
     nextApiClient<CampaignsResponse>('/campaigns')
@@ -314,12 +478,98 @@ export default function DashboardPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
+  async function handleDelete(id: string) {
+    setDeleteTarget(id);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await nextApiClient(`/campaigns/${deleteTarget}`, { method: 'DELETE' });
+      setCampaigns((prev) => prev.filter((c) => c.id !== deleteTarget));
+      toast({ title: t('campaignDeleted'), variant: 'success' });
+    } catch {
+      // silently fail — API returns error messages
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  }
+
+  async function handleDuplicate(id: string) {
+    setDuplicatingId(id);
+    try {
+      // Fetch the original campaign details
+      const original = await nextApiClient<{
+        id: string;
+        name: string;
+        notes: string | null;
+        templateBody: string | null;
+        variableMapping: Record<string, string> | null;
+      }>(`/campaigns/${id}`);
+
+      // Create a new campaign with "(copy)" suffix
+      const newCampaign = await nextApiClient<{ id: string; name: string; notes: string }>('/campaigns', {
+        method: 'POST',
+        body: {
+          name: `${original.name} (copy)`,
+          notes: original.notes || '',
+        },
+      });
+
+      // If original had a template, also copy it to the new campaign
+      if (original.templateBody) {
+        await nextApiClient(`/campaigns/${newCampaign.id}`, {
+          method: 'PATCH',
+          body: {
+            templateBody: original.templateBody,
+            variableMapping: original.variableMapping || {},
+          },
+        });
+      }
+
+      toast({ title: t('campaignDuplicated'), variant: 'success' });
+      // Navigate to the new campaign wizard
+      router.push(`/campaigns/new/step-a?id=${newCampaign.id}`);
+    } catch {
+      // silently fail
+    } finally {
+      setDuplicatingId(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
+      {/* Delete confirmation dialog */}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title={t('deleteCampaign')}
+        message={t('deleteConfirm')}
+        confirmLabel={t('delete_')}
+        cancelLabel={t('cancel')}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+        loading={deleting}
+      />
+
+      {/* Duplicating overlay */}
+      {duplicatingId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-[#111] border border-white/[0.1] rounded-2xl p-6 flex items-center gap-3">
+            <svg className="w-5 h-5 text-emerald-400 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            <span className="text-sm text-white">{t('duplicating')}</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">
             {campaigns.length === 0 && !isLoading ? t('welcomeTo') : t('dashboard')}
           </h1>
           {campaigns.length > 0 && (
@@ -329,7 +579,7 @@ export default function DashboardPage() {
         {campaigns.length > 0 && (
           <Link
             href="/campaigns/new/step-a"
-            className="bg-white text-[#060606] px-5 py-2.5 rounded-full text-sm font-medium hover:bg-white/90 transition-colors flex items-center gap-2 shadow-lg shadow-white/5"
+            className="bg-white text-[#060606] px-4 sm:px-5 py-2.5 rounded-full text-sm font-medium hover:bg-white/90 transition-colors flex items-center gap-2 shadow-lg shadow-white/5 flex-shrink-0"
           >
             <IconPlus />
             {t('newCampaign')}
@@ -350,11 +600,49 @@ export default function DashboardPage() {
             <span className="text-xs text-white/30">{campaigns.length} {t('totalCampaigns').toLowerCase()}</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {campaigns.map((campaign) => (
-              <CampaignCard key={campaign.id} campaign={campaign} />
-            ))}
+          {/* Search & Filter */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <svg className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('searchCampaigns')}
+                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl ps-10 pe-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/20 transition-colors"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as CampaignStatus | 'all')}
+              className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/20 transition-colors min-w-[160px]"
+              aria-label={t('filterByStatus')}
+            >
+              <option value="all" className="bg-[#111]">{t('allStatuses')}</option>
+              {CAMPAIGN_STATUSES.map((s) => (
+                <option key={s} value={s} className="bg-[#111]">{STATUS_LABEL_MAP[s]}</option>
+              ))}
+            </select>
           </div>
+
+          {filteredCampaigns.length === 0 ? (
+            <div className="bg-white/[0.02] border border-white/[0.06] border-dashed rounded-2xl p-12 text-center">
+              <p className="text-white/30 text-sm">{t('noMatchingCampaigns')}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredCampaigns.map((campaign) => (
+                <CampaignCard
+                  key={campaign.id}
+                  campaign={campaign}
+                  onDelete={handleDelete}
+                  onDuplicate={handleDuplicate}
+                />
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>

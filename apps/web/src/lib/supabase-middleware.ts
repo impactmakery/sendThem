@@ -40,6 +40,9 @@ export async function updateSession(request: NextRequest) {
   const isPublicPage =
     request.nextUrl.pathname === '/' ||
     request.nextUrl.pathname === '/he' ||
+    request.nextUrl.pathname === '/terms' ||
+    request.nextUrl.pathname === '/privacy' ||
+    request.nextUrl.pathname === '/contact' ||
     request.nextUrl.pathname.startsWith('/checkout') ||
     request.nextUrl.pathname.startsWith('/api/notify');
 

@@ -1,12 +1,21 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { StepIndicator } from '@/components/wizard/step-indicator';
 import { useWizardStore, type ValidationSummary } from '@/stores/wizard-store';
 import { MAX_EXCEL_FILE_SIZE, ACCEPTED_FILE_EXTENSIONS } from '@repo/shared';
 import { useLanguage } from '@/lib/language-context';
+import { nextApiClient } from '@/lib/next-api-client';
+
+interface RecipientsResponse {
+  recipients: { phoneNumber: string; variables: Record<string, string> }[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 export default function StepBPage() {
   const router = useRouter();
@@ -20,6 +29,26 @@ export default function StepBPage() {
     fileName ? { name: fileName, size: 0 } : null
   );
   const [currentValidation, setCurrentValidation] = useState<ValidationSummary | null>(validation);
+  const [existingRecipientCount, setExistingRecipientCount] = useState<number | null>(null);
+  const [showReupload, setShowReupload] = useState(false);
+  const [checkingExisting, setCheckingExisting] = useState(false);
+
+  // On mount, check if this campaign already has uploaded recipients
+  useEffect(() => {
+    if (!campaignId || currentValidation || fileName) return;
+
+    setCheckingExisting(true);
+    nextApiClient<RecipientsResponse>(`/campaigns/${campaignId}/recipients?limit=1`)
+      .then((data) => {
+        if (data.total > 0) {
+          setExistingRecipientCount(data.total);
+        }
+      })
+      .catch(() => {
+        // Ignore — just show upload form
+      })
+      .finally(() => setCheckingExisting(false));
+  }, [campaignId, currentValidation, fileName]);
 
   const processFile = useCallback(async (file: File) => {
     setError(null);
@@ -122,8 +151,47 @@ export default function StepBPage() {
       )}
 
       <div className="max-w-3xl mx-auto">
-        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-8">
-          {!currentValidation ? (
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 sm:p-8">
+          {checkingExisting ? (
+            /* Loading state while checking existing recipients */
+            <div className="flex flex-col items-center gap-3 py-12">
+              <svg className="w-8 h-8 text-emerald-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <p className="text-sm text-white/50">{t('loading')}</p>
+            </div>
+          ) : existingRecipientCount !== null && !showReupload && !currentValidation ? (
+            /* Existing recipients summary */
+            <>
+              <h2 className="text-xl font-bold text-white">{t('recipientsAlreadyUploaded')}</h2>
+              <p className="text-sm text-white/50 mt-1 mb-6">
+                {existingRecipientCount.toLocaleString()} {t('recipients')}
+              </p>
+
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4 flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-emerald-500/15 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-emerald-400">
+                    {existingRecipientCount.toLocaleString()} {t('validRecipients')}
+                  </p>
+                  <p className="text-xs text-white/40 mt-0.5">
+                    Recipients from a previous upload
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowReupload(true)}
+                  className="text-sm text-emerald-400 hover:underline"
+                >
+                  {t('reuploadFile')}
+                </button>
+              </div>
+            </>
+          ) : !currentValidation ? (
             /* Upload state */
             <>
               <h2 className="text-xl font-bold text-white">{t('uploadRecipients')}</h2>
@@ -149,7 +217,7 @@ export default function StepBPage() {
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-2xl p-12 text-center transition-colors ${
+                className={`border-2 border-dashed rounded-2xl p-6 sm:p-12 text-center transition-colors ${
                   dragOver
                     ? 'border-emerald-500/40 bg-emerald-500/[0.05]'
                     : 'border-white/[0.1] bg-white/[0.02] hover:border-emerald-500/30'
@@ -237,7 +305,7 @@ export default function StepBPage() {
               </div>
 
               {/* Stats cards */}
-              <div className="grid grid-cols-4 gap-3 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                 <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-center">
                   <p className="text-2xl font-bold text-emerald-400">{currentValidation.validCount.toLocaleString()}</p>
                   <p className="text-xs text-emerald-400/70 mt-0.5">{t('validRecipients')}</p>
@@ -306,17 +374,17 @@ export default function StepBPage() {
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/[0.06]">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 mt-8 pt-6 border-t border-white/[0.06]">
             <Link
-              href="/campaigns/new/step-a"
-              className="bg-white/[0.05] border border-white/[0.1] text-white/70 px-4 py-2 rounded-full text-sm font-medium hover:bg-white/[0.08] transition-colors"
+              href={campaignId ? `/campaigns/new/step-a?id=${campaignId}` : '/campaigns/new/step-a'}
+              className="bg-white/[0.05] border border-white/[0.1] text-white/70 px-4 py-3 sm:py-2 rounded-full text-sm font-medium hover:bg-white/[0.08] transition-colors text-center"
             >
               {t('back')}
             </Link>
             <button
               onClick={() => router.push('/campaigns/new/step-c')}
-              disabled={!currentValidation || currentValidation.validCount === 0}
-              className="bg-white text-[#060606] px-6 py-2 rounded-full text-sm font-medium hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              disabled={(!currentValidation || currentValidation.validCount === 0) && existingRecipientCount === null}
+              className="bg-white text-[#060606] px-6 py-3 sm:py-2 rounded-full text-sm font-medium hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {t('next')}
               <svg className="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">

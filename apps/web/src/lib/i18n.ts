@@ -239,6 +239,36 @@ export const translations = {
   backToHome: { he: 'חזרה לדף הבית', en: 'Back to homepage' },
   submitting: { he: 'שולח...', en: 'Submitting...' },
   launching: { he: 'השקה ב-', en: 'Launching ' },
+
+  // ─── Campaign Actions ───
+  deleteCampaign: { he: 'מחיקת קמפיין', en: 'Delete Campaign' },
+  deleteConfirm: { he: 'האם אתם בטוחים שברצונכם למחוק את הקמפיין הזה? פעולה זו אינה הפיכה.', en: 'Are you sure you want to delete this campaign? This action cannot be undone.' },
+  deleteSuccess: { he: 'הקמפיין נמחק בהצלחה', en: 'Campaign deleted successfully' },
+  cannotDeleteNonDraft: { he: 'ניתן למחוק רק קמפיינים בסטטוס טיוטה', en: 'Only draft campaigns can be deleted' },
+  duplicateCampaign: { he: 'שכפול קמפיין', en: 'Duplicate Campaign' },
+  duplicating: { he: 'משכפל...', en: 'Duplicating...' },
+  confirm: { he: 'אישור', en: 'Confirm' },
+  delete_: { he: 'מחיקה', en: 'Delete' },
+  recipientsAlreadyUploaded: { he: 'נמענים כבר הועלו', en: 'Recipients already uploaded' },
+  reuploadFile: { he: 'העלאת קובץ חדש', en: 'Upload new file' },
+  keepExisting: { he: 'שמור קיים', en: 'Keep existing' },
+
+  // ─── 404 ───
+  pageNotFound: { he: 'הדף לא נמצא', en: 'Page not found' },
+  pageNotFoundDesc: { he: 'הדף שחיפשתם לא קיים או שהועבר למיקום אחר.', en: 'The page you were looking for doesn\'t exist or has been moved.' },
+
+  // ─── Dashboard Search/Filter ───
+  searchCampaigns: { he: 'חיפוש קמפיינים...', en: 'Search campaigns...' },
+  filterByStatus: { he: 'סינון לפי סטטוס', en: 'Filter by status' },
+  allStatuses: { he: 'כל הסטטוסים', en: 'All statuses' },
+  noMatchingCampaigns: { he: 'לא נמצאו קמפיינים תואמים', en: 'No matching campaigns' },
+
+  // ─── Session / Toast ───
+  sessionExpired: { he: 'פג תוקף החיבור', en: 'Session expired' },
+  sessionExpiredDesc: { he: 'החיבור שלכם פג תוקף. אנא התחברו מחדש.', en: 'Your session has expired. Please log in again.' },
+  loginAgain: { he: 'התחברות מחדש', en: 'Log in' },
+  campaignDeleted: { he: 'הקמפיין נמחק בהצלחה', en: 'Campaign deleted successfully' },
+  campaignDuplicated: { he: 'הקמפיין שוכפל בהצלחה', en: 'Campaign duplicated successfully' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

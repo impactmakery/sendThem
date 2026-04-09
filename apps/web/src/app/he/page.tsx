@@ -571,8 +571,8 @@ export default function LandingPageHe() {
             <span className="font-heading font-semibold text-sm">SendThem</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-white/30">
-            <a href="#" className="hover:text-white/60 transition-colors">מדיניות פרטיות</a>
-            <a href="#" className="hover:text-white/60 transition-colors">תנאי שימוש</a>
+            <a href="/privacy" className="hover:text-white/60 transition-colors">מדיניות פרטיות</a>
+            <a href="/terms" className="hover:text-white/60 transition-colors">תנאי שימוש</a>
             <span>&copy; {new Date().getFullYear()} SendThem. כל הזכויות שמורות.</span>
           </div>
         </div>

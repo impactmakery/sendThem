@@ -23,6 +23,26 @@ export default function StepCPage() {
   const sampleRows = validation?.sampleRows || [];
   const validCount = validation?.validCount || 0;
 
+  // On mount, if campaign has templateBody in store (from resume), pre-fill the editor
+  useEffect(() => {
+    if (templateBody && !body) {
+      setBody(templateBody);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // If resuming and no template in store yet, try fetching from API
+  useEffect(() => {
+    if (campaignId && !templateBody && !body) {
+      nextApiClient<{ templateBody: string | null }>(`/campaigns/${campaignId}`)
+        .then((data) => {
+          if (data.templateBody) {
+            setBody(data.templateBody);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [campaignId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Fetch credit balance
   useEffect(() => {
     fetch('/api/credits/balance')
@@ -100,7 +120,7 @@ export default function StepCPage() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Editor — 3 cols */}
           <div className="lg:col-span-3 space-y-4">
-            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 sm:p-6">
               <h2 className="text-xl font-bold text-white">{t('composeMessage')}</h2>
               <p className="text-sm text-white/50 mt-1 mb-4">
                 {t('composeMessageDesc') || 'Write your message and insert variables to personalize it for each recipient.'}
@@ -190,17 +210,17 @@ export default function StepCPage() {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <Link
                 href="/campaigns/new/step-b"
-                className="bg-white/[0.05] border border-white/[0.1] text-white/70 px-4 py-2 rounded-full text-sm font-medium hover:bg-white/[0.08] transition-colors"
+                className="bg-white/[0.05] border border-white/[0.1] text-white/70 px-4 py-3 sm:py-2 rounded-full text-sm font-medium hover:bg-white/[0.08] transition-colors text-center"
               >
                 {t('back')}
               </Link>
               <button
                 onClick={handleSubmit}
                 disabled={!canSubmit || submitting}
-                className="bg-white text-[#060606] px-6 py-2 rounded-full text-sm font-medium hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="bg-white text-[#060606] px-6 py-3 sm:py-2 rounded-full text-sm font-medium hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {submitting ? t('submitting') : t('next')}
                 <svg className="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,7 +232,7 @@ export default function StepCPage() {
 
           {/* Preview — 2 cols */}
           <div className="lg:col-span-2">
-            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 sticky top-24">
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 sm:p-6 lg:sticky lg:top-24">
               <h3 className="text-sm font-semibold text-white/50 mb-3">{t('preview')}</h3>
 
               {/* Recipient selector */}

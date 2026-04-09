@@ -103,11 +103,11 @@ export default function StepEPage() {
         </p>
 
         {/* Actions */}
-        <div className="flex gap-3 justify-center mt-8">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8 px-4 sm:px-0">
           {isComplete ? (
             <Link
               href="/dashboard"
-              className="bg-emerald-500 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors"
+              className="bg-emerald-500 text-white px-6 py-3 sm:py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors text-center"
             >
               {t('viewReport')}
             </Link>
@@ -115,11 +115,11 @@ export default function StepEPage() {
             <>
               <Link
                 href="/dashboard"
-                className="border border-white/[0.1] text-white/70 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-white/[0.05] transition-colors"
+                className="border border-white/[0.1] text-white/70 px-5 py-3 sm:py-2.5 rounded-lg text-sm font-medium hover:bg-white/[0.05] transition-colors text-center"
               >
                 Continue in background
               </Link>
-              <button className="border border-red-500/30 text-red-400 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-red-500/10 transition-colors">
+              <button className="border border-red-500/30 text-red-400 px-5 py-3 sm:py-2.5 rounded-lg text-sm font-medium hover:bg-red-500/10 transition-colors">
                 Stop sending
               </button>
             </>

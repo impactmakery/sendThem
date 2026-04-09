@@ -1178,8 +1178,8 @@ export default function LandingPage() {
             <span className="font-heading font-semibold text-sm">SendThem</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-white/30">
-            <a href="#" className="hover:text-white/60 transition-colors">{l('privacyPolicy')}</a>
-            <a href="#" className="hover:text-white/60 transition-colors">{l('termsOfService')}</a>
+            <a href="/privacy" className="hover:text-white/60 transition-colors">{l('privacyPolicy')}</a>
+            <a href="/terms" className="hover:text-white/60 transition-colors">{l('termsOfService')}</a>
             <span>&copy; {new Date().getFullYear()} SendThem. {l('allRightsReserved')}</span>
           </div>
         </div>

@@ -86,7 +86,7 @@ export default function StepDPage() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Review summary — 3 cols */}
           <div className="lg:col-span-3 space-y-4">
-            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 sm:p-6">
               <h2 className="text-xl font-bold text-white mb-4">{t('review')}</h2>
 
               <div className="space-y-3">
@@ -127,7 +127,7 @@ export default function StepDPage() {
                   type="checkbox"
                   checked={complianceAccepted}
                   onChange={(e) => setComplianceAccepted(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-white/[0.1] bg-white/[0.05] accent-emerald-500"
+                  className="mt-1 h-5 w-5 sm:h-4 sm:w-4 rounded border-white/[0.1] bg-white/[0.05] accent-emerald-500 flex-shrink-0"
                 />
                 <label htmlFor="compliance" className="text-sm text-white/50 leading-relaxed" dir="rtl">
                   {COMPLIANCE_TEXT}
@@ -138,7 +138,7 @@ export default function StepDPage() {
 
           {/* Send options — 2 cols */}
           <div className="lg:col-span-2">
-            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 sticky top-24">
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 sm:p-6 lg:sticky lg:top-24">
               <h3 className="text-sm font-semibold text-white/50 mb-4">{t('schedule')}</h3>
 
               <div className="space-y-3">
@@ -217,8 +217,8 @@ export default function StepDPage() {
 
       {/* Confirmation modal */}
       {showConfirm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#0a0a0a] border border-white/[0.1] rounded-2xl p-6 max-w-md mx-4 shadow-xl">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
+          <div className="bg-[#0a0a0a] border border-white/[0.1] rounded-2xl p-6 w-full max-w-md shadow-xl">
             <h3 className="text-lg font-bold text-white">{t('sendCampaign')}</h3>
             <p className="text-sm text-white/50 mt-2">
               {t('confirmSendDesc') || 'Send now to'} <strong className="text-white">{validCount.toLocaleString()}</strong> {t('recipients')}?

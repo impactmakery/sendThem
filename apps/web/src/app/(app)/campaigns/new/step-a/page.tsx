@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { StepIndicator } from '@/components/wizard/step-indicator';
 import { useWizardStore } from '@/stores/wizard-store';
@@ -9,14 +9,53 @@ import { nextApiClient } from '@/lib/next-api-client';
 import { CAMPAIGN_NAME_MAX_LENGTH, CAMPAIGN_NOTES_MAX_LENGTH, validateCampaignName } from '@repo/shared';
 import { useLanguage } from '@/lib/language-context';
 
-export default function StepAPage() {
+function StepAContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useLanguage();
-  const { campaignName, campaignNotes, setCampaignDetails } = useWizardStore();
+  const { campaignId, campaignName, campaignNotes, setCampaignDetails } = useWizardStore();
   const [name, setName] = useState(campaignName);
   const [notes, setNotes] = useState(campaignNotes);
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [isLoadingDraft, setIsLoadingDraft] = useState(false);
+
+  // Resume draft: if ?id= is present and wizard store doesn't already have this campaign loaded
+  useEffect(() => {
+    const resumeId = searchParams.get('id');
+    if (!resumeId) return;
+    if (campaignId === resumeId) {
+      // Already loaded in store — just sync local state
+      setName(campaignName);
+      setNotes(campaignNotes);
+      return;
+    }
+
+    setIsLoadingDraft(true);
+    nextApiClient<{
+      id: string;
+      name: string;
+      notes: string | null;
+      templateBody: string | null;
+      variableMapping: Record<string, string> | null;
+    }>(`/campaigns/${resumeId}`)
+      .then((campaign) => {
+        setCampaignDetails(campaign.id, campaign.name, campaign.notes || '');
+        setName(campaign.name);
+        setNotes(campaign.notes || '');
+        // If campaign has a template body, store it too
+        if (campaign.templateBody) {
+          useWizardStore.getState().setTemplate(
+            campaign.templateBody,
+            campaign.variableMapping || {}
+          );
+        }
+      })
+      .catch(() => {
+        setError('Failed to load campaign draft.');
+      })
+      .finally(() => setIsLoadingDraft(false));
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleNext() {
     const nameError = validateCampaignName(name);
@@ -29,11 +68,21 @@ export default function StepAPage() {
     setError(null);
 
     try {
-      const campaign = await nextApiClient<{ id: string; name: string; notes: string }>(
-        '/campaigns',
-        { method: 'POST', body: { name, notes } }
-      );
-      setCampaignDetails(campaign.id, name, notes);
+      // If resuming an existing draft, update it instead of creating a new one
+      const existingId = campaignId || searchParams.get('id');
+      if (existingId) {
+        await nextApiClient(`/campaigns/${existingId}`, {
+          method: 'PATCH',
+          body: { name, notes },
+        });
+        setCampaignDetails(existingId, name, notes);
+      } else {
+        const campaign = await nextApiClient<{ id: string; name: string; notes: string }>(
+          '/campaigns',
+          { method: 'POST', body: { name, notes } }
+        );
+        setCampaignDetails(campaign.id, name, notes);
+      }
       router.push('/campaigns/new/step-b');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create campaign. Please try again.');
@@ -57,7 +106,7 @@ export default function StepAPage() {
       </Link>
 
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-8">
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 sm:p-8">
           <h2 className="text-xl font-bold text-white">{t('campaignName')}</h2>
           <p className="text-sm text-white/50 mt-1 mb-6">
             This is for your own reference. Recipients will not see this name.
@@ -107,17 +156,17 @@ export default function StepAPage() {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/[0.06]">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 mt-8 pt-6 border-t border-white/[0.06]">
             <Link
               href="/dashboard"
-              className="bg-white/[0.05] border border-white/[0.1] text-white/70 px-4 py-2 rounded-full text-sm font-medium hover:bg-white/[0.08] transition-colors"
+              className="bg-white/[0.05] border border-white/[0.1] text-white/70 px-4 py-3 sm:py-2 rounded-full text-sm font-medium hover:bg-white/[0.08] transition-colors text-center"
             >
               {t('save')}
             </Link>
             <button
               onClick={handleNext}
               disabled={!name.trim() || isCreating}
-              className="bg-white text-[#060606] px-6 py-2 rounded-full text-sm font-medium hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="bg-white text-[#060606] px-6 py-3 sm:py-2 rounded-full text-sm font-medium hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isCreating ? (
                 <>
@@ -140,5 +189,13 @@ export default function StepAPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function StepAPage() {
+  return (
+    <Suspense>
+      <StepAContent />
+    </Suspense>
   );
 }

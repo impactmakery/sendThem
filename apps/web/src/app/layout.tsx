@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Montserrat } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from '@/lib/language-context';
+import { ToastProvider } from '@/components/ui/toast';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' });
@@ -19,7 +20,10 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <body className={`${inter.variable} ${montserrat.variable} font-sans`}>
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider>
+          {children}
+          <ToastProvider />
+        </LanguageProvider>
       </body>
     </html>
   );

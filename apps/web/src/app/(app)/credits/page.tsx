@@ -114,7 +114,7 @@ function CreditsContent() {
       </div>
 
       {/* Current balance */}
-      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-6 py-4 flex items-center justify-between">
+      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1">
         <span className="text-sm text-emerald-400">{t('creditBalance')}</span>
         <span className="text-xl font-bold text-emerald-400">
           {balance !== null ? `${balance.toLocaleString()} ${t('credits')}` : '...'}
@@ -180,7 +180,7 @@ function CreditsContent() {
               <button
                 onClick={() => handleBuy(packName)}
                 disabled={isLoading || loadingPack !== null}
-                className={`mt-6 w-full py-2.5 rounded-full text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`mt-6 w-full py-3 sm:py-2.5 rounded-full text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                   isPopular
                     ? 'bg-white text-[#060606] hover:bg-white/90'
                     : 'bg-white/[0.05] border border-white/[0.1] text-white/70 hover:bg-white/[0.08]'
@@ -196,10 +196,10 @@ function CreditsContent() {
       </div>
 
       {/* Enterprise CTA */}
-      <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 text-center">
+      <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 sm:p-6 text-center">
         <p className="font-semibold text-white">{t('enterpriseTitle')}</p>
         <p className="text-sm text-white/50 mt-1">{t('enterpriseDesc')}</p>
-        <button className="mt-3 bg-white/[0.05] border border-white/[0.1] text-white/70 px-5 py-2 rounded-full text-sm font-medium hover:bg-white/[0.08] transition-colors">
+        <button className="mt-3 w-full sm:w-auto bg-white/[0.05] border border-white/[0.1] text-white/70 px-5 py-3 sm:py-2 rounded-full text-sm font-medium hover:bg-white/[0.08] transition-colors">
           {t('contactUs')}
         </button>
       </div>
@@ -213,7 +213,7 @@ function CreditsContent() {
         ) : (
           <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[480px]">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
                     <th className="text-start text-white/50 font-medium px-4 py-3">{t('date')}</th>

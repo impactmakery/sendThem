@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import * as XLSX from 'xlsx';
 import { useLanguage } from '@/lib/language-context';
 import { nextApiClient } from '@/lib/next-api-client';
 import { StatusBadge } from '@/components/dashboard/status-badge';
@@ -88,6 +89,30 @@ export default function ReportPage() {
   const [page, setPage] = useState(1);
   const [totalRecipients, setTotalRecipients] = useState(0);
   const [filter, setFilter] = useState('all');
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = useCallback(async () => {
+    if (!campaign || exporting) return;
+    setExporting(true);
+    try {
+      const data = await nextApiClient<{ recipients: Recipient[]; total: number }>(
+        `/campaigns/${campaignId}/recipients?limit=10000`
+      );
+      const rows = data.recipients.map((rec) => ({
+        [t('phone')]: rec.phoneNumber,
+        [t('name')]: rec.variables?.first_name || rec.variables?.name || '',
+        [t('status')]: rec.status,
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Recipients');
+      XLSX.writeFile(wb, `${campaign.name}-recipients.xlsx`);
+    } catch {
+      // export failed silently
+    } finally {
+      setExporting(false);
+    }
+  }, [campaign, campaignId, exporting, t]);
 
   useEffect(() => {
     async function load() {
@@ -164,9 +189,9 @@ export default function ReportPage() {
       </div>
 
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">{campaign.name}</h1>
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-white truncate">{campaign.name}</h1>
           <div className="flex items-center gap-3 mt-2">
             <StatusBadge status={campaign.status} />
             <span className="text-sm text-white/50">
@@ -174,6 +199,23 @@ export default function ReportPage() {
             </span>
           </div>
         </div>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          className="flex items-center justify-center gap-2 bg-white/[0.06] border border-white/[0.1] text-white px-4 py-3 sm:py-2 rounded-lg text-sm font-medium hover:bg-white/[0.1] transition-colors disabled:opacity-50 w-full sm:w-auto flex-shrink-0"
+        >
+          {exporting ? (
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+          )}
+          {exporting ? t('loading') : t('exportExcel')}
+        </button>
       </div>
 
       {/* Stats cards */}
@@ -222,7 +264,7 @@ export default function ReportPage() {
 
       {/* Recipients table */}
       <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
+        <div className="px-4 py-3 border-b border-white/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-white">{t('recipients')}</h3>
           <div className="flex items-center gap-2">
             <select
@@ -239,7 +281,8 @@ export default function ReportPage() {
           </div>
         </div>
         {recipients.length > 0 ? (
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[480px]">
             <thead>
               <tr className="border-b border-white/[0.06]">
                 <th className="text-right text-xs font-medium text-white/40 px-4 py-2">{t('phone')}</th>
@@ -263,6 +306,7 @@ export default function ReportPage() {
               ))}
             </tbody>
           </table>
+          </div>
         ) : (
           <div className="p-8 text-center text-white/30 text-sm">
             {t('noRecipients') || 'No recipients found'}
@@ -275,7 +319,7 @@ export default function ReportPage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="text-xs text-white/50 hover:text-white disabled:opacity-30"
+              className="text-xs text-white/50 hover:text-white disabled:opacity-30 py-2 px-3 -my-2 -ms-3"
             >
               {t('previous') || 'Previous'}
             </button>
@@ -285,7 +329,7 @@ export default function ReportPage() {
             <button
               onClick={() => setPage((p) => p + 1)}
               disabled={page >= Math.ceil(totalRecipients / 50)}
-              className="text-xs text-white/50 hover:text-white disabled:opacity-30"
+              className="text-xs text-white/50 hover:text-white disabled:opacity-30 py-2 px-3 -my-2 -me-3"
             >
               {t('next')}
             </button>

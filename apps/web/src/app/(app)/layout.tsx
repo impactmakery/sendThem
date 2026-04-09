@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { AppHeader } from '@/components/layout/app-header';
 import { useLanguage } from '@/lib/language-context';
+import { SessionGuard } from '@/components/auth/session-guard';
 
 interface MeResponse {
   id: string;
@@ -28,11 +29,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div dir={dir} className="min-h-screen bg-[#060606]">
-      <AppHeader creditBalance={creditBalance} userEmail={email} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
-      </main>
-    </div>
+    <SessionGuard>
+      <div dir={dir} className="min-h-screen bg-[#060606]">
+        <AppHeader creditBalance={creditBalance} userEmail={email} />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          {children}
+        </main>
+      </div>
+    </SessionGuard>
   );
 }

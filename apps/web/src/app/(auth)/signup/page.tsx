@@ -56,6 +56,17 @@ export default function SignupPage() {
       return;
     }
 
+    // Fire-and-forget welcome email — don't block the redirect
+    try {
+      fetch('/api/email/welcome', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: email, name: email.split('@')[0] }),
+      }).catch(() => {});
+    } catch {
+      // Silently ignore — welcome email is not critical
+    }
+
     router.push(`/checkout?email=${encodeURIComponent(email)}`);
   }
 
