@@ -23,16 +23,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Service temporarily unavailable.' }, { status: 503 });
   }
 
-  const contactLabel = contactType === 'phone' ? 'Phone' : 'Email';
-
-  // Monday.com column values — adjust column IDs to match your board.
-  // Default column IDs: "name" (item name), "text" (contact), "status" (contact type), "date4" (signup date)
   const today = new Date();
   const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+  const trimmedContact = contact.trim();
   const columnValues = JSON.stringify({
-    text_mm278wd6: contact.trim(),
-    text_mm27zp36: contactLabel,
+    ...(contactType === 'email'
+      ? { email_mm28cbvb: { email: trimmedContact, text: trimmedContact } }
+      : { phone_mm28r7ry: { phone: trimmedContact, countryShortName: 'IL' } }),
     date_mm278wm3: { date: dateStr },
   });
 

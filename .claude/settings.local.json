@@ -58,7 +58,8 @@
       "mcp__monday-api-mcp-impactmakery__get_board_items_page",
       "mcp__monday-api-mcp-impactmakery__move_item_to_group",
       "mcp__monday-api-mcp-impactmakery__change_item_column_values",
-      "mcp__monday-api-mcp-impactmakery__all_monday_api"
+      "mcp__monday-api-mcp-impactmakery__all_monday_api",
+      "Bash(curl:*)"
     ]
   }
 }
