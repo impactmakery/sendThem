@@ -1,0 +1,11 @@
+"monday-api-mcp-impactmakery": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mondaydotcomorg/monday-api-mcp@1.11.1",
+        "-t",
+        "eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY0Mjk1MDYxNiwiYWFpIjoxMSwidWlkIjo5ODUwMDkxNCwiaWFkIjoiMjAyNi0wNC0wOFQxMDo0MzozOS40NjNaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6MzE3ODk3MzQsInJnbiI6ImV1YzEifQ.NmzNilhfOY_xqmVt5PZJjB_tyZHb7Hk9zeoEuy_yAvo",
+        "--enable-dynamic-api-tools",
+        "true"
+      ]
+    },

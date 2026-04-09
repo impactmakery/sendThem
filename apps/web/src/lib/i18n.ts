@@ -1,0 +1,194 @@
+export type Locale = 'he' | 'en';
+
+export const DEFAULT_LOCALE: Locale = 'he';
+
+export const LOCALE_DIR: Record<Locale, 'rtl' | 'ltr'> = {
+  he: 'rtl',
+  en: 'ltr',
+};
+
+export const translations = {
+  // ─── Common ───
+  appName: { he: 'SendThem', en: 'SendThem' },
+  login: { he: 'התחברות', en: 'Log in' },
+  signup: { he: 'הרשמה', en: 'Sign up' },
+  getStarted: { he: 'התחל עכשיו', en: 'Get started' },
+  logout: { he: 'התנתקות', en: 'Log out' },
+  save: { he: 'שמור', en: 'Save' },
+  cancel: { he: 'ביטול', en: 'Cancel' },
+  back: { he: 'חזרה', en: 'Back' },
+  next: { he: 'הבא', en: 'Next' },
+  submit: { he: 'שליחה', en: 'Submit' },
+  loading: { he: 'טוען...', en: 'Loading...' },
+  email: { he: 'אימייל', en: 'Email' },
+  password: { he: 'סיסמה', en: 'Password' },
+  confirmPassword: { he: 'אישור סיסמה', en: 'Confirm password' },
+  fullName: { he: 'שם מלא', en: 'Full name' },
+  phone: { he: 'טלפון', en: 'Phone' },
+  credits: { he: 'קרדיטים', en: 'credits' },
+  buyCredits: { he: 'רכישת קרדיטים', en: 'Buy Credits' },
+  settings: { he: 'הגדרות', en: 'Settings' },
+  accountSettings: { he: 'הגדרות חשבון', en: 'Account Settings' },
+
+  // ─── Auth ───
+  createAccount: { he: 'יצירת חשבון', en: 'Create your account' },
+  createAccountDesc: { he: 'שלחו את קמפיין הוואטסאפ הראשון שלכם תוך דקות. 50 קרדיטים חינם.', en: 'Send your first WhatsApp campaign in minutes. 50 free credits included.' },
+  signupWithGoogle: { he: 'הרשמה עם Google', en: 'Sign up with Google' },
+  loginWithGoogle: { he: 'התחברות עם Google', en: 'Log in with Google' },
+  orContinueWithEmail: { he: 'או המשיכו עם אימייל', en: 'or continue with email' },
+  alreadyHaveAccount: { he: 'כבר יש לכם חשבון?', en: 'Already have an account?' },
+  dontHaveAccount: { he: 'אין לכם חשבון?', en: "Don't have an account?" },
+  welcomeBack: { he: 'ברוכים השבים', en: 'Welcome back' },
+  loginDesc: { he: 'התחברו לקמפיינים ולקרדיטים שלכם.', en: 'Log in to your campaigns and credits.' },
+  rememberMe: { he: 'זכור אותי', en: 'Remember me' },
+  forgotPassword: { he: 'שכחתם סיסמה?', en: 'Forgot password?' },
+  loggingIn: { he: 'מתחבר...', en: 'Logging in...' },
+  creatingAccount: { he: 'יוצר חשבון...', en: 'Creating account...' },
+  invalidCredentials: { he: 'אימייל או סיסמה שגויים.', en: 'Invalid email or password.' },
+  fillAllFields: { he: 'נא למלא את כל השדות.', en: 'Please fill in all fields.' },
+  accountExists: { he: 'חשבון עם אימייל זה כבר קיים.', en: 'An account with this email already exists.' },
+  loginInstead: { he: 'התחברו במקום', en: 'Log in instead' },
+  passwordHint: { he: 'לפחות 8 תווים, כולל מספר', en: 'At least 8 characters, including a number' },
+  passwordsNoMatch: { he: 'הסיסמאות אינן תואמות', en: 'Passwords do not match' },
+  agreeToTerms: { he: 'אני מסכים/ה ל', en: 'I agree to the' },
+  termsOfService: { he: 'תנאי שימוש', en: 'Terms of Service' },
+  privacyPolicy: { he: 'מדיניות פרטיות', en: 'Privacy Policy' },
+  and: { he: 'ו', en: 'and' },
+  mustAcceptTos: { he: 'יש לאשר את תנאי השימוש', en: 'You must accept the Terms of Service' },
+
+  // ─── Forgot / Reset Password ───
+  forgotPasswordTitle: { he: 'שכחתם סיסמה?', en: 'Forgot password?' },
+  forgotPasswordDesc: { he: 'הזינו את האימייל שלכם ונשלח לכם קישור לאיפוס.', en: "Enter your email and we'll send you a reset link." },
+  sendResetLink: { he: 'שליחת קישור איפוס', en: 'Send reset link' },
+  sending: { he: 'שולח...', en: 'Sending...' },
+  checkYourEmail: { he: 'בדקו את האימייל', en: 'Check your email' },
+  resetLinkSent: { he: 'שלחנו קישור לאיפוס סיסמה ל-', en: "We've sent a password reset link to " },
+  backToLogin: { he: 'חזרה להתחברות', en: 'Back to login' },
+  resetPassword: { he: 'איפוס סיסמה', en: 'Reset password' },
+  resetPasswordDesc: { he: 'הזינו סיסמה חדשה לחשבון שלכם.', en: 'Enter a new password for your account.' },
+  newPassword: { he: 'סיסמה חדשה', en: 'New password' },
+  confirmNewPassword: { he: 'אישור סיסמה חדשה', en: 'Confirm new password' },
+  updating: { he: 'מעדכן...', en: 'Updating...' },
+  updatePassword: { he: 'עדכון סיסמה', en: 'Update password' },
+
+  // ─── Verify Email ───
+  verifyEmailTitle: { he: 'בדקו את האימייל שלכם', en: 'Check your email' },
+  verifyEmailDesc: { he: 'שלחנו קישור אימות ל-', en: "We've sent a verification link to " },
+  verifyEmailHint: { he: 'לחצו על הקישור באימייל כדי להפעיל את החשבון שלכם.', en: 'Click the link in the email to activate your account.' },
+  openGmail: { he: 'פתיחת Gmail', en: 'Open Gmail' },
+  resendEmail: { he: 'שליחה מחדש', en: 'Resend email' },
+  didntGetEmail: { he: 'לא קיבלתם? בדקו בספאם או', en: "Didn't get it? Check spam or" },
+
+  // ─── Dashboard ───
+  welcomeTo: { he: 'ברוכים הבאים ל-SendThem', en: 'Welcome to SendThem' },
+  dashboard: { he: 'לוח בקרה', en: 'Dashboard' },
+  myCampaigns: { he: 'הקמפיינים שלי', en: 'My Campaigns' },
+  newCampaign: { he: 'קמפיין חדש', en: 'New Campaign' },
+  createNewCampaign: { he: 'צור קמפיין חדש', en: 'Create New Campaign' },
+  noCampaignsYet: { he: 'עדיין אין קמפיינים', en: 'No campaigns yet' },
+  startFirstCampaign: { he: 'צרו את הקמפיין הראשון שלכם כדי להתחיל לשלוח הודעות WhatsApp.', en: 'Create your first campaign to start sending WhatsApp messages.' },
+  totalCampaigns: { he: 'סה"כ קמפיינים', en: 'Total Campaigns' },
+  messagesSent: { he: 'הודעות נשלחו', en: 'Messages Sent' },
+  deliveryRate: { he: 'אחוז הגעה', en: 'Delivery Rate' },
+  recentActivity: { he: 'פעילות אחרונה', en: 'Recent Activity' },
+  noRecentActivity: { he: 'אין פעילות אחרונה', en: 'No recent activity' },
+  howItWorksTitle: { he: 'איך זה עובד?', en: 'How It Works' },
+  howItWorksDesc: { he: 'צפו בסרטון ההדרכה שלנו כדי להתחיל', en: 'Watch our tutorial to get started' },
+
+  // ─── Campaign Wizard ───
+  step: { he: 'שלב', en: 'Step' },
+  campaignName: { he: 'שם הקמפיין', en: 'Campaign Name' },
+  campaignNotes: { he: 'הערות (אופציונלי)', en: 'Notes (optional)' },
+  campaignNamePlaceholder: { he: 'למשל: קמפיין פסח 2026', en: 'e.g., Passover Campaign 2026' },
+  campaignNotesPlaceholder: { he: 'הערות פנימיות...', en: 'Internal notes...' },
+  uploadRecipients: { he: 'העלאת נמענים', en: 'Upload Recipients' },
+  dragDropExcel: { he: 'גררו קובץ אקסל לכאן', en: 'Drag & drop Excel file here' },
+  orBrowse: { he: 'או לחצו לבחירת קובץ', en: 'or click to browse' },
+  composeMessage: { he: 'כתיבת הודעה', en: 'Compose Message' },
+  messageTemplate: { he: 'תבנית הודעה', en: 'Message Template' },
+  insertVariable: { he: 'הכנסת משתנה', en: 'Insert Variable' },
+  preview: { he: 'תצוגה מקדימה', en: 'Preview' },
+  review: { he: 'סקירה ואישור', en: 'Review & Approve' },
+  sendNow: { he: 'שליחה עכשיו', en: 'Send Now' },
+  schedule: { he: 'תזמון', en: 'Schedule' },
+  sendCampaign: { he: 'שליחת קמפיין', en: 'Send Campaign' },
+  sending_: { he: 'שולח...', en: 'Sending...' },
+  recipients: { he: 'נמענים', en: 'Recipients' },
+  validRecipients: { he: 'נמענים תקינים', en: 'Valid recipients' },
+  invalidRecipients: { he: 'נמענים לא תקינים', en: 'Invalid recipients' },
+  duplicates: { he: 'כפולים', en: 'Duplicates' },
+  complianceDeclaration: { he: 'הצהרת תאימות', en: 'Compliance Declaration' },
+  complianceText: { he: 'אני מאשר/ת שיש לי הסכמה לשלוח הודעות לכל הנמענים ברשימה זו.', en: 'I confirm I have consent to message all recipients in this list.' },
+
+  // ─── Step E (Sending Progress) ───
+  sendingProgress: { he: 'התקדמות שליחה', en: 'Sending Progress' },
+  sent: { he: 'נשלח', en: 'Sent' },
+  queued: { he: 'בתור', en: 'Queued' },
+  failed: { he: 'נכשל', en: 'Failed' },
+  campaignComplete: { he: 'הקמפיין הושלם', en: 'Campaign complete' },
+  viewReport: { he: 'צפייה בדוח', en: 'View Report' },
+
+  // ─── Report ───
+  campaignReport: { he: 'דוח קמפיין', en: 'Campaign Report' },
+  delivered: { he: 'נמסר', en: 'Delivered' },
+  read: { he: 'נקרא', en: 'Read' },
+  total: { he: 'סה"כ', en: 'Total' },
+  exportExcel: { he: 'ייצוא לאקסל', en: 'Export to Excel' },
+  recipient: { he: 'נמען', en: 'Recipient' },
+  status: { he: 'סטטוס', en: 'Status' },
+  sentAt: { he: 'נשלח ב', en: 'Sent at' },
+
+  // ─── Credits ───
+  creditBalance: { he: 'יתרת קרדיטים', en: 'Credit Balance' },
+  creditPacks: { he: 'חבילות קרדיטים', en: 'Credit Packs' },
+  mostPopular: { he: 'הכי פופולרי', en: 'Most Popular' },
+  perMessage: { he: 'לכל הודעה', en: 'per message' },
+  buy: { he: 'רכישה', en: 'Buy' },
+  noSubscription: { he: 'ללא מנוי חודשי', en: 'No monthly subscription' },
+  creditsNeverExpire: { he: 'קרדיטים ללא תפוגה', en: 'Credits never expire' },
+
+  // ─── Settings ───
+  accountSettingsTitle: { he: 'הגדרות חשבון', en: 'Account Settings' },
+  emailAddress: { he: 'כתובת אימייל', en: 'Email Address' },
+  currentPassword: { he: 'סיסמה נוכחית', en: 'Current password' },
+  changePassword: { he: 'שינוי סיסמה', en: 'Change Password' },
+  passwordUpdated: { he: 'הסיסמה עודכנה בהצלחה', en: 'Password updated successfully' },
+
+  // ─── Status badges ───
+  draft: { he: 'טיוטה', en: 'Draft' },
+  pendingApproval: { he: 'ממתין לאישור', en: 'Pending Approval' },
+  templateRejected: { he: 'תבנית נדחתה', en: 'Template Rejected' },
+  readyToSend: { he: 'מוכן לשליחה', en: 'Ready to Send' },
+  scheduled: { he: 'מתוזמן', en: 'Scheduled' },
+  sendingStatus: { he: 'בשליחה', en: 'Sending' },
+  sentStatus: { he: 'נשלח', en: 'Sent' },
+  partiallyFailed: { he: 'נכשל חלקית', en: 'Partially Failed' },
+  failedStatus: { he: 'נכשל', en: 'Failed' },
+  canceled: { he: 'בוטל', en: 'Canceled' },
+
+  // ─── Wizard steps ───
+  stepDetails: { he: 'פרטי קמפיין', en: 'Campaign Details' },
+  stepUpload: { he: 'העלאת קובץ', en: 'Upload File' },
+  stepCompose: { he: 'כתיבת הודעה', en: 'Compose Message' },
+  stepReview: { he: 'סקירה', en: 'Review' },
+  stepSend: { he: 'שליחה', en: 'Send' },
+
+  // ─── Checkout ───
+  almostThere: { he: 'כמעט שם!', en: 'Almost there!' },
+  twoWeeksMessage: { he: 'בעוד שבועיים בדיוק השירות נכנס לפעילות. רוצים שנודיע לכם כשזה קורה?', en: 'In exactly two weeks the service becomes active. Would you like us to notify you when it happens?' },
+  notifyMe: { he: 'עדכנו אותי ביום ההשקה', en: 'Notify me on launch day' },
+  howToReach: { he: 'איך ליצור קשר?', en: 'How should we reach you?' },
+  noSpam: { he: 'ללא ספאם. רק הודעה אחת כשנצא לאוויר.', en: 'No spam. Just a single notification when we go live.' },
+  youreOnTheList: { he: 'אתם ברשימה!', en: "You're on the list!" },
+  willNotify: { he: 'נודיע לכם ב-', en: "We'll notify you on " },
+  whenLive: { he: ' כש-SendThem יצא לאוויר. תהיו בין הראשונים לשלוח.', en: ' when SendThem goes live. You\'ll be among the first to send.' },
+  backToHome: { he: 'חזרה לדף הבית', en: 'Back to homepage' },
+  submitting: { he: 'שולח...', en: 'Submitting...' },
+  launching: { he: 'השקה ב-', en: 'Launching ' },
+} as const;
+
+export type TranslationKey = keyof typeof translations;
+
+export function t(key: TranslationKey, locale: Locale): string {
+  return translations[key][locale];
+}
