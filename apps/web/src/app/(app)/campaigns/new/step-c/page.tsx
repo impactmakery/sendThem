@@ -1,24 +1,35 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { StepIndicator } from '@/components/wizard/step-indicator';
 import { useWizardStore } from '@/stores/wizard-store';
 import { META_TEMPLATE_CHAR_LIMIT } from '@repo/shared';
 import { useLanguage } from '@/lib/language-context';
+import { nextApiClient } from '@/lib/next-api-client';
 
 export default function StepCPage() {
   const router = useRouter();
   const { t } = useLanguage();
-  const { validation, recipients, templateBody, setTemplate } = useWizardStore();
+  const { campaignId, validation, recipients, templateBody, setTemplate } = useWizardStore();
   const [body, setBody] = useState(templateBody || '');
   const [previewIndex, setPreviewIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [balance, setBalance] = useState<number | null>(null);
 
   const columns = validation?.detectedColumns.filter((c) => c !== 'phone_number') || [];
   const sampleRows = validation?.sampleRows || [];
   const validCount = validation?.validCount || 0;
+
+  // Fetch credit balance
+  useEffect(() => {
+    fetch('/api/credits/balance')
+      .then((r) => r.json())
+      .then((d) => setBalance(d.balance ?? 0))
+      .catch(() => {});
+  }, []);
 
   // Build variable mapping: column name -> {{N}}
   const variableMapping = useMemo(() => {
@@ -32,7 +43,7 @@ export default function StepCPage() {
   // Resolve preview text by substituting variables
   const previewText = useMemo(() => {
     let text = body;
-    columns.forEach((col, i) => {
+    columns.forEach((col) => {
       const placeholder = `{{${col}}}`;
       const value = sampleRows[previewIndex]?.[col] || '';
       text = text.replaceAll(placeholder, value);
@@ -45,7 +56,11 @@ export default function StepCPage() {
   }
 
   async function handleSubmit() {
-    // Build the mapping for Meta: {{1}} -> column_name
+    if (!campaignId) {
+      setError('Campaign not found. Please start from Step A.');
+      return;
+    }
+
     const metaMapping: Record<string, string> = {};
     columns.forEach((col, i) => {
       metaMapping[String(i + 1)] = col;
@@ -53,15 +68,29 @@ export default function StepCPage() {
 
     setTemplate(body, metaMapping);
     setSubmitting(true);
+    setError(null);
 
-    // TODO: Submit template to Meta via API
-    await new Promise((r) => setTimeout(r, 500));
+    try {
+      // Save template to campaign in DB
+      await nextApiClient(`/campaigns/${campaignId}`, {
+        method: 'PATCH',
+        body: {
+          templateBody: body,
+          variableMapping: metaMapping,
+          status: 'ready_to_send',
+        },
+      });
 
-    router.push('/campaigns/new/step-d');
+      router.push('/campaigns/new/step-d');
+    } catch (err: any) {
+      setError(err.message || 'Failed to save template');
+      setSubmitting(false);
+    }
   }
 
   const isOverLimit = body.length > META_TEMPLATE_CHAR_LIMIT;
   const canSubmit = body.trim().length > 0 && !isOverLimit;
+  const hasSufficientCredits = balance !== null && balance >= validCount;
 
   return (
     <div>
@@ -74,8 +103,14 @@ export default function StepCPage() {
             <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
               <h2 className="text-xl font-bold text-white">{t('composeMessage')}</h2>
               <p className="text-sm text-white/50 mt-1 mb-4">
-                Write your message and insert variables to personalize it for each recipient.
+                {t('composeMessageDesc') || 'Write your message and insert variables to personalize it for each recipient.'}
               </p>
+
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-xl mb-4">
+                  {error}
+                </div>
+              )}
 
               {/* Variable insertion toolbar */}
               <div className="flex items-center gap-2 mb-2">
@@ -116,13 +151,10 @@ export default function StepCPage() {
               {/* Character counter + clear */}
               <div className="flex items-center justify-between mt-1">
                 <span className={`text-xs ${isOverLimit ? 'text-red-500 font-medium' : 'text-white/30'}`} dir="ltr">
-                  {body.length} / {META_TEMPLATE_CHAR_LIMIT} characters
+                  {body.length} / {META_TEMPLATE_CHAR_LIMIT}
                 </span>
-                <button
-                  onClick={() => setBody('')}
-                  className="text-xs text-white/30 hover:text-white/60"
-                >
-                  Clear
+                <button onClick={() => setBody('')} className="text-xs text-white/30 hover:text-white/60">
+                  {t('clear') || 'Clear'}
                 </button>
               </div>
             </div>
@@ -130,25 +162,29 @@ export default function StepCPage() {
             {/* Pricing summary */}
             <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-white/50">Cost for this campaign</span>
+                <span className="text-sm text-white/50">{t('campaignCost') || 'Cost for this campaign'}</span>
                 <span className="text-lg font-bold text-white">
                   {validCount.toLocaleString()} {t('credits')}
                 </span>
               </div>
               <p className="text-xs text-white/40 mt-1">
-                1 credit per recipient &times; {validCount.toLocaleString()} {t('recipients').toLowerCase()}
+                1 {t('credit') || 'credit'} × {validCount.toLocaleString()} {t('recipients')}
               </p>
               <div className="flex items-center gap-1.5 mt-2">
-                <span className="text-xs text-white/40">Your balance: 50 {t('credits')}</span>
-                {validCount <= 50 ? (
-                  <span className="text-xs text-emerald-400 font-medium">Sufficient</span>
-                ) : (
-                  <>
-                    <span className="text-xs text-red-400 font-medium">Insufficient</span>
-                    <Link href="/credits" className="text-xs text-emerald-400 hover:underline mr-1">
-                      {t('buyCredits')}
-                    </Link>
-                  </>
+                <span className="text-xs text-white/40">
+                  {t('yourBalance') || 'Your balance'}: {balance !== null ? balance.toLocaleString() : '...'} {t('credits')}
+                </span>
+                {balance !== null && (
+                  hasSufficientCredits ? (
+                    <span className="text-xs text-emerald-400 font-medium">{t('sufficient') || 'Sufficient'}</span>
+                  ) : (
+                    <>
+                      <span className="text-xs text-red-400 font-medium">{t('insufficient') || 'Insufficient'}</span>
+                      <Link href="/credits" className="text-xs text-emerald-400 hover:underline mr-1">
+                        {t('buyCredits')}
+                      </Link>
+                    </>
+                  )
                 )}
               </div>
             </div>
@@ -166,7 +202,7 @@ export default function StepCPage() {
                 disabled={!canSubmit || submitting}
                 className="bg-white text-[#060606] px-6 py-2 rounded-full text-sm font-medium hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                {submitting ? t('submitting') : t('submit')}
+                {submitting ? t('submitting') : t('next')}
                 <svg className="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
@@ -180,24 +216,25 @@ export default function StepCPage() {
               <h3 className="text-sm font-semibold text-white/50 mb-3">{t('preview')}</h3>
 
               {/* Recipient selector */}
-              <div className="mb-4">
-                <label className="text-xs text-white/40 mb-1 block">Preview as:</label>
-                <select
-                  value={previewIndex}
-                  onChange={(e) => setPreviewIndex(Number(e.target.value))}
-                  className="w-full bg-white/[0.05] border border-white/[0.1] text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40"
-                >
-                  {sampleRows.map((row, i) => (
-                    <option key={i} value={i} className="bg-[#0a0a0a] text-white">
-                      {row.first_name || row.phone_number || `Row ${i + 1}`} (row {i + 1})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {sampleRows.length > 0 && (
+                <div className="mb-4">
+                  <label className="text-xs text-white/40 mb-1 block">{t('previewAs') || 'Preview as'}:</label>
+                  <select
+                    value={previewIndex}
+                    onChange={(e) => setPreviewIndex(Number(e.target.value))}
+                    className="w-full bg-white/[0.05] border border-white/[0.1] text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40"
+                  >
+                    {sampleRows.map((row, i) => (
+                      <option key={i} value={i} className="bg-[#0a0a0a] text-white">
+                        {row.first_name || row.name || row.phone_number || `Row ${i + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* WhatsApp-style preview */}
               <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
-                {/* Chat header */}
                 <div className="bg-[#1a2e1a] text-white px-4 py-2.5 flex items-center gap-3">
                   <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -210,28 +247,19 @@ export default function StepCPage() {
                   </div>
                 </div>
 
-                {/* Message bubble */}
                 <div className="p-4 min-h-[120px]">
                   {previewText ? (
                     <div className="bg-[#1a2e1a] text-white/90 rounded-2xl rounded-tr-none p-3 max-w-[90%]" dir="rtl">
-                      <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                        {previewText}
-                      </p>
-                      <p className="text-[10px] text-white/40 text-left mt-1" dir="ltr">
-                        10:42
-                      </p>
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{previewText}</p>
+                      <p className="text-[10px] text-white/40 text-left mt-1" dir="ltr">10:42</p>
                     </div>
                   ) : (
                     <p className="text-center text-sm text-white/30 py-8">
-                      Start typing to see a preview...
+                      {t('startTypingPreview') || 'Start typing to see a preview...'}
                     </p>
                   )}
                 </div>
               </div>
-
-              <p className="text-xs text-white/30 mt-3">
-                This is how recipient #{previewIndex + 1} ({sampleRows[previewIndex]?.first_name || 'Unknown'}) will see the message.
-              </p>
             </div>
           </div>
         </div>

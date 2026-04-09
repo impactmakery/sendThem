@@ -6,18 +6,21 @@ import Link from 'next/link';
 import { StepIndicator } from '@/components/wizard/step-indicator';
 import { useWizardStore } from '@/stores/wizard-store';
 import { useLanguage } from '@/lib/language-context';
+import { nextApiClient } from '@/lib/next-api-client';
 
 const COMPLIANCE_TEXT = `אני מצהיר שהאחריות המלאה לקבלת הסכמה מפורשת מראש מכל הנמענים, בהתאם לסעיף 30א לחוק התקשורת (בזק ושידורים), התשמ"ב-1982, מוטלת עלי בלבד. אני מבין כי ImpactMakery והפלטפורמה אינם נושאים באחריות כלשהי לתוכן ההודעות שאני שולח או למצב ההסכמה של הנמענים שלי.`;
 
 export default function StepDPage() {
   const router = useRouter();
   const { t } = useLanguage();
-  const { campaignName, validation, templateBody } = useWizardStore();
+  const { campaignId, campaignName, validation, templateBody } = useWizardStore();
   const [complianceAccepted, setComplianceAccepted] = useState(false);
   const [sendMode, setSendMode] = useState<'now' | 'later'>('now');
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('10:00');
   const [showConfirm, setShowConfirm] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const validCount = validation?.validCount || 0;
 
@@ -25,14 +28,48 @@ export default function StepDPage() {
     if (sendMode === 'now') {
       setShowConfirm(true);
     } else {
-      // TODO: Schedule via API
-      router.push('/dashboard');
+      handleSchedule();
     }
   }
 
-  function confirmSend() {
-    // TODO: Trigger send via API
-    router.push('/campaigns/new/step-e');
+  async function handleSchedule() {
+    if (!campaignId || !scheduleDate) return;
+    setSending(true);
+    setError(null);
+
+    try {
+      const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString();
+      await nextApiClient(`/campaigns/${campaignId}`, {
+        method: 'PATCH',
+        body: {
+          status: 'scheduled',
+          scheduledAt,
+        },
+      });
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Failed to schedule campaign');
+      setSending(false);
+    }
+  }
+
+  async function confirmSend() {
+    if (!campaignId) return;
+    setSending(true);
+    setError(null);
+
+    try {
+      // Transition to sending state
+      await nextApiClient(`/campaigns/${campaignId}`, {
+        method: 'PATCH',
+        body: { status: 'sending' },
+      });
+      router.push('/campaigns/new/step-e');
+    } catch (err: any) {
+      setError(err.message || 'Failed to start campaign');
+      setSending(false);
+      setShowConfirm(false);
+    }
   }
 
   return (
@@ -40,6 +77,12 @@ export default function StepDPage() {
       <StepIndicator currentStep={4} />
 
       <div className="max-w-5xl mx-auto">
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-xl mb-4">
+            {error}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Review summary — 3 cols */}
           <div className="lg:col-span-3 space-y-4">
@@ -59,17 +102,13 @@ export default function StepDPage() {
                   <span className="text-sm text-white/40">{t('total')}</span>
                   <span className="text-sm font-medium text-white">{validCount.toLocaleString()} {t('credits')}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-white/[0.06]">
-                  <span className="text-sm text-white/40">{t('messageTemplate')}</span>
-                  <span className="text-sm font-medium text-emerald-400">Approved by Meta</span>
-                </div>
               </div>
 
-              {/* Approved message preview */}
+              {/* Message preview */}
               <div className="mt-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
                 <p className="text-xs font-medium text-emerald-400 mb-2">{t('messageTemplate')}</p>
                 <p className="text-sm text-white/70 whitespace-pre-wrap" dir="rtl">
-                  {templateBody || 'No message template set'}
+                  {templateBody || t('noTemplate') || 'No message template set'}
                 </p>
               </div>
             </div>
@@ -103,7 +142,6 @@ export default function StepDPage() {
               <h3 className="text-sm font-semibold text-white/50 mb-4">{t('schedule')}</h3>
 
               <div className="space-y-3">
-                {/* Send now */}
                 <button
                   onClick={() => setSendMode('now')}
                   className={`w-full text-right p-4 rounded-lg border-2 transition-colors ${
@@ -114,11 +152,10 @@ export default function StepDPage() {
                 >
                   <p className="font-medium text-white">{t('sendNow')}</p>
                   <p className="text-sm text-white/40 mt-0.5">
-                    Start sending immediately after confirmation
+                    {t('sendNowDesc') || 'Start sending immediately after confirmation'}
                   </p>
                 </button>
 
-                {/* Schedule */}
                 <button
                   onClick={() => setSendMode('later')}
                   className={`w-full text-right p-4 rounded-lg border-2 transition-colors ${
@@ -129,7 +166,7 @@ export default function StepDPage() {
                 >
                   <p className="font-medium text-white">{t('schedule')}</p>
                   <p className="text-sm text-white/40 mt-0.5">
-                    Pick a specific date and time
+                    {t('scheduleDesc') || 'Pick a specific date and time'}
                   </p>
                 </button>
 
@@ -153,16 +190,17 @@ export default function StepDPage() {
                 )}
               </div>
 
-              {/* Send button */}
               <div className="mt-6 space-y-3">
                 <button
                   onClick={handleSend}
-                  disabled={!complianceAccepted}
+                  disabled={!complianceAccepted || sending || (sendMode === 'later' && !scheduleDate)}
                   className="w-full bg-white text-[#060606] py-3 rounded-full text-sm font-medium hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {sendMode === 'now'
-                    ? `${t('sendCampaign')} (${validCount.toLocaleString()})`
-                    : t('schedule')}
+                  {sending
+                    ? (t('processing') || 'Processing...')
+                    : sendMode === 'now'
+                      ? `${t('sendCampaign')} (${validCount.toLocaleString()})`
+                      : t('schedule')}
                 </button>
 
                 <Link
@@ -183,21 +221,23 @@ export default function StepDPage() {
           <div className="bg-[#0a0a0a] border border-white/[0.1] rounded-2xl p-6 max-w-md mx-4 shadow-xl">
             <h3 className="text-lg font-bold text-white">{t('sendCampaign')}</h3>
             <p className="text-sm text-white/50 mt-2">
-              {t('sendNow')} — <strong className="text-white">{validCount.toLocaleString()}</strong> {t('recipients').toLowerCase()}?
-              This will deduct <strong className="text-white">{validCount.toLocaleString()}</strong> {t('credits')}.
+              {t('confirmSendDesc') || 'Send now to'} <strong className="text-white">{validCount.toLocaleString()}</strong> {t('recipients')}?
+              {' '}{t('willDeduct') || 'This will deduct'} <strong className="text-white">{validCount.toLocaleString()}</strong> {t('credits')}.
             </p>
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowConfirm(false)}
+                disabled={sending}
                 className="flex-1 bg-white/[0.05] border border-white/[0.1] text-white/70 py-2 rounded-full text-sm font-medium hover:bg-white/[0.08]"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={confirmSend}
-                className="flex-1 bg-white text-[#060606] py-2 rounded-full text-sm font-medium hover:bg-white/90"
+                disabled={sending}
+                className="flex-1 bg-white text-[#060606] py-2 rounded-full text-sm font-medium hover:bg-white/90 disabled:opacity-50"
               >
-                {t('sendNow')}
+                {sending ? (t('sending') || 'Sending...') : t('sendNow')}
               </button>
             </div>
           </div>
